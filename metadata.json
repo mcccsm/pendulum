@@ -1,0 +1,5 @@
+{
+  "name": "Double Pendulum Phase Space Fractal",
+  "description": "A WebGL-based visualization of double pendulum phase space, mapping initial conditions to outcomes on a texture map.",
+  "requestFramePermissions": []
+}
