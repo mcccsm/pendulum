@@ -11,7 +11,6 @@ declare global {
       start: () => void;
       stop: () => void;
       reset: () => void;
-      resetView: () => void;
     };
   }
 }
@@ -103,7 +102,6 @@ const App: React.FC = () => {
       <Canvas
         simState={simState}
         onTimeUpdate={handleTimeUpdate}
-        onUpdateState={handleUpdate}
       />
       {isMenuVisible && (
         <Controls
