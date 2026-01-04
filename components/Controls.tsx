@@ -97,7 +97,7 @@ const Controls: React.FC<ControlsProps> = ({ state, onUpdate, onReset }) => {
 
       {/* Physics */}
       <div className="mb-6 space-y-3">
-        <h2 className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Physics & View</h2>
+        <h2 className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Physics</h2>
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-gray-400">
             <span>Gravity</span>
@@ -113,33 +113,6 @@ const Controls: React.FC<ControlsProps> = ({ state, onUpdate, onReset }) => {
             className="w-full accent-orange-500 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
           />
         </div>
-
-        <div className="flex gap-2 mt-4 pt-4 border-t border-white/10">
-          <button
-            onClick={() => onUpdate({
-              viewMode: state.viewMode === 'PHASE' ? 'HEATMAP' : 'PHASE'
-            })}
-            className={`flex-1 py-1.5 text-xs rounded font-medium transition-colors ${state.viewMode === 'HEATMAP'
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
-                : 'bg-white/10 text-gray-300 border border-white/10 hover:bg-white/20'
-              }`}
-          >
-            {state.viewMode === 'HEATMAP' ? 'Mode: Heatmap' : 'Mode: Phase'}
-          </button>
-
-          <button
-            onClick={() => onUpdate({ zoom: 1.0, pan: { x: 0, y: 0 }, time: 0 })}
-            className="px-3 py-1.5 text-xs bg-white/10 text-gray-300 rounded border border-white/10 hover:bg-white/20 hover:text-white transition-colors"
-          >
-            Reset View
-          </button>
-        </div>
-
-        {state.zoom > 1.1 && (
-          <div className="text-[10px] text-blue-400 font-mono text-center">
-            Zoom: {state.zoom.toFixed(1)}x
-          </div>
-        )}
       </div>
 
       {/* Aesthetics */}
