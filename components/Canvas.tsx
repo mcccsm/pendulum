@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { vertexShaderSource } from '../shaders/vertex';
 import { fragmentShaderSource } from '../shaders/fragment';
 import { simulationShaderSource } from '../shaders/simulation';
@@ -13,6 +13,14 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number | null>(null);
   const glRef = useRef<WebGLRenderingContext | null>(null);
+
+  // --- Magnifier lens ---
+  const [lensActive, setLensActive] = useState(false);
+  const [lensZoomDisplay, setLensZoomDisplay] = useState(3);
+  const lensActiveRef = useRef(false);
+  const lensUvRef = useRef({ x: 0.5, y: 0.5 });
+  const lensZoomRef = useRef(3.0);
+  useEffect(() => { lensActiveRef.current = lensActive; }, [lensActive]);
 
   // Programs
   const simProgramRef = useRef<WebGLProgram | null>(null);
@@ -186,6 +194,46 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
     }
   }, [simState.imageUrl]);
 
+  // --- Lens Input Handlers ---
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|BUTTON|SELECT)$/.test(t.tagName)) return;
+      e.preventDefault();
+      setLensActive(v => !v);
+    };
+
+    const onMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      lensUvRef.current = {
+        x: (e.clientX - rect.left) / rect.width,
+        y: 1 - (e.clientY - rect.top) / rect.height,
+      };
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (!lensActiveRef.current) return;
+      e.preventDefault();
+      const factor = Math.exp(-e.deltaY * 0.0015);
+      const next = Math.min(20, Math.max(1, lensZoomRef.current * factor));
+      lensZoomRef.current = next;
+      setLensZoomDisplay(next);
+    };
+
+    window.addEventListener('keydown', onKey);
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      canvas.removeEventListener('mousemove', onMove);
+      canvas.removeEventListener('wheel', onWheel);
+    };
+  }, []);
+
   // --- Main Loop ---
   useEffect(() => {
     timeRef.current = simState.time;
@@ -257,6 +305,13 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
 
         gl.uniform2f(gl.getUniformLocation(renderProg, "u_resolution"), displayWidth, displayHeight);
 
+        // Lens uniforms
+        const lensRadiusPx = Math.min(displayWidth, displayHeight) * 0.15;
+        gl.uniform1i(gl.getUniformLocation(renderProg, "u_lens_active"), lensActiveRef.current ? 1 : 0);
+        gl.uniform2f(gl.getUniformLocation(renderProg, "u_lens_uv"), lensUvRef.current.x, lensUvRef.current.y);
+        gl.uniform1f(gl.getUniformLocation(renderProg, "u_lens_radius_px"), lensRadiusPx);
+        gl.uniform1f(gl.getUniformLocation(renderProg, "u_lens_zoom"), lensZoomRef.current);
+
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
         // --- UPDATE STATE ---
@@ -277,7 +332,20 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
     }
   }, [simState.isPlaying, simState.simSpeed, simState.gridScale, simState.gravity, simState.time]);
 
-  return <canvas ref={canvasRef} className="w-full h-full block" />;
+  return (
+    <>
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full block"
+        style={{ cursor: lensActive ? 'none' : 'auto' }}
+      />
+      {lensActive && (
+        <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded text-xs text-white/90 border border-white/10 pointer-events-none font-mono">
+          Lens · {lensZoomDisplay.toFixed(1)}× · Space to exit
+        </div>
+      )}
+    </>
+  );
 };
 
 export default Canvas;
