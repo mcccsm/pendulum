@@ -98,11 +98,13 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
-      <Canvas
-        simState={simState}
-        onTimeUpdate={handleTimeUpdate}
-      />
+    <div className="relative w-full h-screen bg-black overflow-hidden flex items-center justify-center">
+      <div style={{ width: 'min(100vw, 100vh)', height: 'min(100vw, 100vh)' }} className="relative">
+        <Canvas
+          simState={simState}
+          onTimeUpdate={handleTimeUpdate}
+        />
+      </div>
       {isMenuVisible && (
         <Controls
           state={simState}
