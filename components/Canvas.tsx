@@ -334,7 +334,7 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
         const idleSec = (now - lastInteractionRef.current) / 1000;
         const stillAlpha = smoothstep(0.3, 0.8, idleSec);
         const visiblePixels = Math.PI * lensRadiusPx * lensRadiusPx / (lensZoomRef.current * lensZoomRef.current);
-        const zoomAlpha = smoothstep(100, 1, visiblePixels);
+        const zoomAlpha = smoothstep(1000, 1, visiblePixels);
         const wireframeAlpha = lensActiveRef.current ? stillAlpha * zoomAlpha : 0;
         gl.uniform1f(gl.getUniformLocation(renderProg, "u_wireframe_alpha"), wireframeAlpha);
 
