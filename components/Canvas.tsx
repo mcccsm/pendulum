@@ -367,7 +367,7 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
       />
       {lensActive && (
         <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded text-xs text-white/90 border border-white/10 pointer-events-none font-mono">
-          Lens · {lensZoomDisplay.toFixed(1)}× · Space to exit
+          Lens · {lensZoomDisplay.toFixed(1)}× · Scroll to zoom · Space to exit
         </div>
       )}
     </>
