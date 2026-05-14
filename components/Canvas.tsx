@@ -202,8 +202,10 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'Space') return;
       const t = e.target as HTMLElement | null;
-      if (t && /^(INPUT|TEXTAREA|BUTTON|SELECT)$/.test(t.tagName)) return;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
       e.preventDefault();
+      e.stopPropagation();
+      if (t && t.tagName === 'BUTTON') t.blur();
       setLensActive(v => !v);
     };
 
@@ -224,11 +226,11 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
       setLensZoomDisplay(next);
     };
 
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
     canvas.addEventListener('mousemove', onMove);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('wheel', onWheel);
     };
