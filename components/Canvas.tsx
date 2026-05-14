@@ -20,7 +20,19 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
   const lensActiveRef = useRef(false);
   const lensUvRef = useRef({ x: 0.5, y: 0.5 });
   const lensZoomRef = useRef(3.0);
+  const lastInteractionRef = useRef(performance.now());
   useEffect(() => { lensActiveRef.current = lensActive; }, [lensActive]);
+
+  const getLensRadiusPx = () => {
+    const c = canvasRef.current;
+    if (!c) return 100;
+    return Math.min(c.clientWidth, c.clientHeight) * 0.15;
+  };
+
+  const smoothstep = (e0: number, e1: number, x: number) => {
+    const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  };
 
   // Programs
   const simProgramRef = useRef<WebGLProgram | null>(null);
@@ -206,6 +218,7 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
       e.preventDefault();
       e.stopPropagation();
       if (t && t.tagName === 'BUTTON') t.blur();
+      lastInteractionRef.current = performance.now();
       setLensActive(v => !v);
     };
 
@@ -215,13 +228,16 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
         x: (e.clientX - rect.left) / rect.width,
         y: 1 - (e.clientY - rect.top) / rect.height,
       };
+      lastInteractionRef.current = performance.now();
     };
 
     const onWheel = (e: WheelEvent) => {
       if (!lensActiveRef.current) return;
       e.preventDefault();
+      lastInteractionRef.current = performance.now();
+      const maxZoom = 2.0 * getLensRadiusPx(); // 1 phase-space texel fills the lens diameter
       const factor = Math.exp(-e.deltaY * 0.0015);
-      const next = Math.min(50, Math.max(1, lensZoomRef.current * factor));
+      const next = Math.min(maxZoom, Math.max(1, lensZoomRef.current * factor));
       lensZoomRef.current = next;
       setLensZoomDisplay(next);
     };
@@ -313,6 +329,14 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
         gl.uniform2f(gl.getUniformLocation(renderProg, "u_lens_uv"), lensUvRef.current.x, lensUvRef.current.y);
         gl.uniform1f(gl.getUniformLocation(renderProg, "u_lens_radius_px"), lensRadiusPx);
         gl.uniform1f(gl.getUniformLocation(renderProg, "u_lens_zoom"), lensZoomRef.current);
+
+        // Wireframe alpha: visible only when zoom shows <=100 texels and mouse has been still
+        const idleSec = (now - lastInteractionRef.current) / 1000;
+        const stillAlpha = smoothstep(0.3, 0.8, idleSec);
+        const visiblePixels = Math.PI * lensRadiusPx * lensRadiusPx / (lensZoomRef.current * lensZoomRef.current);
+        const zoomAlpha = smoothstep(100, 1, visiblePixels);
+        const wireframeAlpha = lensActiveRef.current ? stillAlpha * zoomAlpha : 0;
+        gl.uniform1f(gl.getUniformLocation(renderProg, "u_wireframe_alpha"), wireframeAlpha);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
