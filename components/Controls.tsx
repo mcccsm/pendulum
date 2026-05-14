@@ -85,13 +85,16 @@ const Controls: React.FC<ControlsProps> = ({ state, onUpdate, onReset }) => {
           <input
             type="range"
             min="10"
-            max="100000"
+            max="1000000"
             step="1"
             value={state.gridScale}
             onChange={(e) => onUpdate({ gridScale: parseFloat(e.target.value) })}
             className="w-full accent-blue-500 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
           />
           <p className="text-[10px] text-gray-500 pt-1">Lower = Blockier, Higher = Smoother</p>
+          {state.gridScale > 100000 && (
+            <p className="text-[10px] text-yellow-400/90 pt-1">⚠ beyond 100k: float-precision artifacts may appear</p>
+          )}
         </div>
       </div>
 

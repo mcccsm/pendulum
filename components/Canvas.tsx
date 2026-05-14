@@ -221,7 +221,7 @@ const Canvas: React.FC<CanvasProps> = ({ simState, onTimeUpdate }) => {
       if (!lensActiveRef.current) return;
       e.preventDefault();
       const factor = Math.exp(-e.deltaY * 0.0015);
-      const next = Math.min(20, Math.max(1, lensZoomRef.current * factor));
+      const next = Math.min(50, Math.max(1, lensZoomRef.current * factor));
       lensZoomRef.current = next;
       setLensZoomDisplay(next);
     };
